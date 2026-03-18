@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Closest Coffee Shops</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    label { display: block; margin-top: 0.5rem; }
+    input { padding: 0.25rem 0.5rem; margin-top: 0.25rem; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+    table { margin-top: 1.5rem; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; }
+    .error { color: red; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Closest Coffee Shops</h1>
+
+  <div>
+    <label>
+      Coordinate X
+      <input type="text" id="x" />
+    </label>
+
+    <label>
+      Coordinate Y
+      <input type="text" id="y" />
+    </label>
+
+    <button id="search">Search</button>
+  </div>
+
+  <div id="error" class="error"></div>
+
+  <table id="results" style="display:none">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>X</th>
+        <th>Y</th>
+        <th>Distance</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const btn = document.getElementById("search");
+    const errorEl = document.getElementById("error");
+    const table = document.getElementById("results");
+    const tbody = table.querySelector("tbody");
+
+    btn.addEventListener("click", async () => {
+      const x = document.getElementById("x").value.trim();
+      const y = document.getElementById("y").value.trim();
+      errorEl.textContent = "";
+      tbody.innerHTML = "";
+      table.style.display = "none";
+
+      if (!x || !y) {
+        errorEl.textContent = "Please fill in both coordinates.";
+        return;
+      }
+
+      try {
+        const url = `/api/v1/coffee_shops/closest?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}`;
+        const res = await fetch(url, { headers: { "Accept": "application/vnd.api+json" } });
+
+        const body = await res.json();
+
+        if (!res.ok) {
+          const message = body.errors && body.errors[0] && body.errors[0].detail;
+          errorEl.textContent = message || "An error occurred while calling the API.";
+          return;
+        }
+
+        const items = body.data || [];
+        if (items.length === 0) {
+          errorEl.textContent = "No coffee shops found.";
+          return;
+        }
+
+        items.forEach(item => {
+          const attrs = item.attributes;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${attrs.name}</td>
+            <td>${attrs.location.x}</td>
+            <td>${attrs.location.y}</td>
+            <td>${attrs.distance}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.style.display = "";
+      } catch (e) {
+        console.error(e);
+        errorEl.textContent = "The API request failed.";
+      }
+    });
+  </script>
+</body>
+</html>
