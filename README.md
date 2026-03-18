@@ -5,7 +5,7 @@ Simple Rails API that returns the three closest coffee shops to a given point, u
 
 ## Stack
 
-- Ruby 3.2.4  
+- Ruby 3.3.1
 - Rails 8.1.2 (API-only)
 
 ## Setup
